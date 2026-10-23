@@ -32,16 +32,34 @@
         </span>
       </p>
 
-      <p class="mt-4">
-        Block management controls will be added next.
+      <div class="mt-6">
+        <button
+          type="button"
+          class="btn-ui"
+          :disabled="saving"
+          @click="changeBlockStatus"
+        >
+          {{ saving
+            ? "Updating..."
+            : block.status === 1
+              ? "Close Block"
+              : "Reopen Block"
+          }}
+        </button>
+      </div>
+
+      <p v-if="message" class="mt-4" :class="messageError ? 'text-red-500' : 'text-green'">
+        {{ message }}
       </p>
 
-      <router-link
-        :to="{ name: 'neighborhoodUpdate', params: { id: $route.params.id } }"
-        class="btn-ui inline-block mt-6"
-      >
-        Back
-      </router-link>
+      <div class="mt-6">
+        <router-link
+          :to="{ name: 'neighborhoodUpdate', params: { id: $route.params.id } }"
+          class="btn-ui inline-block"
+        >
+          Back
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -62,7 +80,10 @@ export default Vue.extend({
   data: () => ({
     loading: true,
     canAdmin: false,
+    saving: false,
     block: null as Block | null,
+    message: "",
+    messageError: false,
   }),
 
   methods: {
@@ -70,6 +91,8 @@ export default Vue.extend({
       this.loading = true;
       this.canAdmin = false;
       this.block = null;
+      this.message = "";
+      this.messageError = false;
 
       try {
         const hoodId = this.$route.params.id;
@@ -103,6 +126,45 @@ export default Vue.extend({
         console.error("Failed to load block management page", error);
       } finally {
         this.loading = false;
+      }
+    },
+
+    async changeBlockStatus() {
+      if (!this.block || !this.canAdmin || this.saving) return;
+
+      const block = this.block;
+      const newStatus = block.status === 1 ? 0 : 1;
+      const action = newStatus === 0 ? "close" : "reopen";
+
+      const confirmed = window.confirm(
+        `Are you sure you want to ${action} ${block.name}?`
+      );
+
+      if (!confirmed) return;
+
+      this.saving = true;
+      this.message = "";
+      this.messageError = false;
+
+      try {
+        const hoodId = this.$route.params.id;
+
+        await this.$http.post(`/hood/${hoodId}/block/${block.id}/status`, {
+          status: newStatus,
+        });
+
+        // Update the displayed status only after the API succeeds.
+        block.status = newStatus;
+
+        this.message = newStatus === 0
+          ? "Block closed successfully."
+          : "Block reopened successfully.";
+      } catch (error) {
+        console.error("Failed to update block status", error);
+        this.message = "Unable to update block status. Please try again.";
+        this.messageError = true;
+      } finally {
+        this.saving = false;
       }
     },
   },

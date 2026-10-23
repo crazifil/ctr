@@ -1,4 +1,3 @@
-
 <template>
   <div class="p-4 text-center">
     <div v-if="loading">
@@ -39,15 +38,18 @@
             style="height: 53px;"
           >
             <button
-              v-if="blocks.find(b => b.location === index)"
+              v-if="getBlockAtLocation(index)"
               type="button"
               class="w-full h-full block text-center flex items-center justify-center"
+              :class="{
+                'text-red-500': getBlockAtLocation(index).status === 0
+              }"
               :style="{
                 'background-image': blockBackground
               }"
               @click="selectBlock(getBlockAtLocation(index))"
             >
-              {{ blocks.find(b => b.location === index).name }}
+              {{ getBlockAtLocation(index).name }}
             </button>
           </div>
         </div>
@@ -57,24 +59,20 @@
         Closed blocks will remain visible here for management.
       </p>
 
-      <div v-if="selectedBlock" class="mt-6">
-        <div class="text-2xl font-bold text-green">
-          {{ selectedBlock.name }}
-        </div>
-
-        <p class="mt-2">
-          Status:
-          {{ selectedBlock.status === 1 ? "OPEN" : "CLOSED" }}
-        </p>
-
-        <p class="mt-2">
-          Block management controls will be added next.
-        </p>
+      <div class="mt-6">
+        <router-link
+          :to="{
+            name: 'neighborhoodpage',
+            params: { id: $route.params.id }
+          }"
+          class="btn-ui inline-block"
+        >
+          Back
+        </router-link>
       </div>
     </div>
   </div>
 </template>
-
 
 <script lang="ts">
 import Vue from "vue";
@@ -95,7 +93,6 @@ export default Vue.extend({
     canAdmin: false,
     colony: null as any,
     blocks: [] as Block[],
-    selectedBlock: null as Block | null,
   }),
 
   methods: {
@@ -131,6 +128,7 @@ export default Vue.extend({
           "Failed to load neighbourhood blocks",
           error,
         );
+
         this.blocks = [];
       }
     },
@@ -157,7 +155,6 @@ export default Vue.extend({
       this.loading = true;
       this.canAdmin = false;
       this.blocks = [];
-      this.selectedBlock = null;
       this.colony = null;
 
       try {
@@ -177,6 +174,7 @@ export default Vue.extend({
           "Failed to check neighbourhood permissions",
           error,
         );
+
         this.canAdmin = false;
       } finally {
         this.loading = false;
