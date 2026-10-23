@@ -19,6 +19,7 @@ import NeighborhoodPage from "./pages/neighborhood/NeighborhoodPage.vue";
 import NeighborhoodMapPage from "./pages/neighborhood/NeighborhoodMapPage.vue";
 import NeighborhoodTools from "@/pages/neighborhood/NeighborhoodTools.vue";
 import NeighborhoodUpdatePage from "@/pages/neighborhood/NeighborhoodUpdatePage.vue";
+import NeighborhoodBlockUpdatePage from "@/pages/neighborhood/NeighborhoodBlockUpdatePage.vue";
 
 import BlockPage from "./pages/block/BlockPage.vue";
 import BlockMapPage from "./pages/block/BlockMapPage.vue";
@@ -272,6 +273,12 @@ export default [
         path: "update",
         component: NeighborhoodUpdatePage,
         name: "neighborhoodUpdate",
+        meta: { wrapper: true },
+      },
+      {
+        path: "update/block/:blockId",
+        component: NeighborhoodBlockUpdatePage,
+        name: "neighborhoodBlockUpdate",
         meta: { wrapper: true },
       },
       {

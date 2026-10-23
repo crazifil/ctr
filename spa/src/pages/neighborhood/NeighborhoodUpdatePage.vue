@@ -136,9 +136,15 @@ export default Vue.extend({
     },
 
     selectBlock(block: Block | undefined) {
-      if (block) {
-        this.selectedBlock = block;
-      }
+      if (!block) return;
+
+      this.$router.push({
+        name: "neighborhoodBlockUpdate",
+        params: {
+          id: this.$route.params.id,
+          blockId: String(block.id),
+        },
+      });
     },
 
     getBlockAtLocation(location: number): Block | undefined {
