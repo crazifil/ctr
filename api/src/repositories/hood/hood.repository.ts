@@ -14,10 +14,11 @@ export class HoodRepository {
   
   public async getBlocks(hoodId: number): Promise<any> {
     return knex
-      .select('place.id', 'place.name', 'map_location.location')
+      .select('place.id', 'place.name', 'place.status', 'map_location.location')
       .from('place')
       .innerJoin('map_location', 'map_location.place_id', 'place.id')
       .where('map_location.parent_place_id', hoodId)
+      .where('place.type', 'block')
       .orderBy('map_location.location');
   }
 }
