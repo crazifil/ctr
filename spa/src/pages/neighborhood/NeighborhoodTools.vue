@@ -61,10 +61,14 @@ export default Vue.extend({
   },
   watch: {
     "$store.data.place.hood": {
+      immediate: true,
       handler() {
         if (this.$store.data.place.hood) {
           this.loaded = true;
           this.checkAdmin();
+        } else {
+          this.loaded = false;
+          this.canAdmin = false;
         }
       },
     },
