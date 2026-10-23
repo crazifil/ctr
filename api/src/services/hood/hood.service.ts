@@ -144,6 +144,18 @@ export class HoodService {
     return await this.hoodRepository.getBlocks(hoodId);
   }
 
+  public async updateBlockStatus(
+    hoodId: number,
+    blockId: number,
+    status: number,
+  ): Promise<boolean> {
+    return await this.hoodRepository.updateBlockStatus(
+      hoodId,
+      blockId,
+      status,
+    );
+  }
+
   public async canAdmin(hoodId: number, memberId: number): Promise<boolean> {
     const roleAssignments = await this.roleAssignmentRepository.getByMemberId(memberId);
     const colony = await this.getColony(hoodId);
