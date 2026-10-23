@@ -2,7 +2,7 @@
 <template>
   <div class="p-4 text-center">
     <div v-if="loading">
-      Checking neighbourhood permissions...
+      Loading neighbourhood...
     </div>
 
     <div v-else-if="!canAdmin">
@@ -15,18 +15,77 @@
     </div>
 
     <div v-else>
-      <div class="text-2xl font-bold text-green">
+      <div class="text-2xl font-bold text-green mb-4">
         Neighbourhood Update
       </div>
-      <p class="mt-4">
-        Manage the open and closed status of neighbourhood blocks.
+
+      <p class="mb-4">
+        Select an existing block to manage it.
       </p>
+
+      <div class="inline-block mx-auto">
+        <div
+          class="grid grid-cols-6 gap-0"
+          :style="{
+            padding: '16px 19px 13px 10px',
+            width: '540px',
+            height: '300px',
+            'background-image': mapBackground
+          }"
+        >
+          <div
+            v-for="index in 30"
+            :key="index"
+            style="height: 53px;"
+          >
+            <button
+              v-if="blocks.find(b => b.location === index)"
+              type="button"
+              class="w-full h-full block text-center flex items-center justify-center"
+              :style="{
+                'background-image': blockBackground
+              }"
+              @click="selectBlock(getBlockAtLocation(index))"
+            >
+              {{ blocks.find(b => b.location === index).name }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-4">
+        Closed blocks will remain visible here for management.
+      </p>
+
+      <div v-if="selectedBlock" class="mt-6">
+        <div class="text-2xl font-bold text-green">
+          {{ selectedBlock.name }}
+        </div>
+
+        <p class="mt-2">
+          Status:
+          {{ selectedBlock.status === 1 ? "OPEN" : "CLOSED" }}
+        </p>
+
+        <p class="mt-2">
+          Block management controls will be added next.
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
+
 <script lang="ts">
 import Vue from "vue";
+import { colonyDataHelper } from "@/helpers";
+
+interface Block {
+  id: number;
+  name: string;
+  status: number;
+  location: number;
+}
 
 export default Vue.extend({
   name: "NeighborhoodUpdatePage",
@@ -34,10 +93,12 @@ export default Vue.extend({
   data: () => ({
     loading: true,
     canAdmin: false,
+    colony: null as any,
+    blocks: [] as Block[],
+    selectedBlock: null as Block | null,
   }),
 
   methods: {
-    
     async loadNeighbourhood() {
       try {
         const response = await this.$http.get(
@@ -48,6 +109,8 @@ export default Vue.extend({
         place.hood = response.data.hood;
         place.colony = response.data.colony;
 
+        this.colony = response.data.colony;
+
         this.$store.methods.setPlace(place);
 
         document.title = `${place.name} - Cybertown`;
@@ -56,9 +119,40 @@ export default Vue.extend({
       }
     },
 
+    async loadBlocks() {
+      try {
+        const response = await this.$http.get(
+          `/hood/${this.$route.params.id}/blocks`,
+        );
+
+        this.blocks = response.data.blocks;
+      } catch (error) {
+        console.error(
+          "Failed to load neighbourhood blocks",
+          error,
+        );
+        this.blocks = [];
+      }
+    },
+
+    selectBlock(block: Block | undefined) {
+      if (block) {
+        this.selectedBlock = block;
+      }
+    },
+
+    getBlockAtLocation(location: number): Block | undefined {
+      return this.blocks.find(
+        block => block.location === location,
+      );
+    },
+
     async checkPermissions() {
       this.loading = true;
       this.canAdmin = false;
+      this.blocks = [];
+      this.selectedBlock = null;
+      this.colony = null;
 
       try {
         await this.loadNeighbourhood();
@@ -68,11 +162,37 @@ export default Vue.extend({
         );
 
         this.canAdmin = response.data.result === true;
+
+        if (this.canAdmin) {
+          await this.loadBlocks();
+        }
       } catch (error) {
+        console.error(
+          "Failed to check neighbourhood permissions",
+          error,
+        );
         this.canAdmin = false;
       } finally {
         this.loading = false;
       }
+    },
+  },
+
+  computed: {
+    mapBackground(): string {
+      if (!this.colony) return "";
+
+      const theme = colonyDataHelper[this.colony.slug].map_theme;
+
+      return `url('/assets/img/map_themes/${theme}/hood/Pimg2D000.gif')`;
+    },
+
+    blockBackground(): string {
+      if (!this.colony) return "";
+
+      const theme = colonyDataHelper[this.colony.slug].map_theme;
+
+      return `url('/assets/img/map_themes/${theme}/hood/Picon2D000.gif')`;
     },
   },
 
