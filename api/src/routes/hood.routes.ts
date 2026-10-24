@@ -13,6 +13,9 @@ hoodRoutes.post('/:id/block/:blockId/rename', (request, response) =>
 );
 hoodRoutes.get('/:id', (request, response) => hoodController.getHood(request, response));
 hoodRoutes.get('/:id/can_admin', (request, response) => hoodController.canAdmin(request, response));
+hoodRoutes.get('/:id/can_rename_block', (request, response) =>
+  hoodController.canRenameBlock(request, response),
+);
 hoodRoutes.get('/:id/can_manage_access', (request, response) =>
   hoodController.canManageAccess(request, response),
 );

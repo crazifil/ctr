@@ -194,6 +194,65 @@ class HoodController {
     }
   }
 
+  public async canRenameBlock(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    const { id } = request.params;
+    const { apitoken } = request.headers;
+
+    try {
+      if (typeof apitoken !== 'string' || !apitoken) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      let session;
+
+      try {
+        session = this.memberService.decodeMemberToken(apitoken);
+      } catch (error) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      if (!session) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      const hoodId = Number(id);
+
+      if (!Number.isSafeInteger(hoodId) || hoodId <= 0) {
+        response.status(400).json({
+          error: 'Invalid neighbourhood.',
+        });
+        return;
+      }
+
+      const allowed = await this.hoodService.canRenameBlock(
+        hoodId,
+        session.id,
+      );
+
+      response.status(200).json({
+        result: allowed,
+      });
+    } catch (error) {
+      console.error('Failed to check block rename permissions', error);
+
+      response.status(500).json({
+        error: 'Failed to check block rename permissions.',
+      });
+    }
+  }
+
   public async canManageAccess(
     request: Request,
     response: Response,
