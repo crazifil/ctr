@@ -22,7 +22,6 @@ export class HoodRepository {
       .orderBy('map_location.location');
   }
 
-  
   public async updateBlockStatus(
     hoodId: number,
     blockId: number,
@@ -40,6 +39,27 @@ export class HoodRepository {
           .where('map_location.parent_place_id', hoodId);
       })
     . update({ status });
+
+    return updated === 1;
+  }
+
+  public async renameBlock(
+    hoodId: number,
+    blockId: number,
+    name: string,
+  ): Promise<boolean> {
+    const updated = await knex('place')
+      .where({
+        id: blockId,
+        type: 'block',
+      })
+      .whereExists(function () {
+        this.select(knex.raw('1'))
+          .from('map_location')
+          .whereRaw('map_location.place_id = place.id')
+          .where('map_location.parent_place_id', hoodId);
+      })
+      .update({ name });
 
     return updated === 1;
   }

@@ -8,6 +8,9 @@ hoodRoutes.get('/:id/blocks', (request, response) => hoodController.getBlocks(re
 hoodRoutes.post('/:id/block/:blockId/status', (request, response) =>
   hoodController.updateBlockStatus(request, response),
 );
+hoodRoutes.post('/:id/block/:blockId/rename', (request, response) =>
+  hoodController.renameBlock(request, response),
+);
 hoodRoutes.get('/:id', (request, response) => hoodController.getHood(request, response));
 hoodRoutes.get('/:id/can_admin', (request, response) => hoodController.canAdmin(request, response));
 hoodRoutes.get('/:id/can_manage_access', (request, response) =>

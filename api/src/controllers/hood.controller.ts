@@ -346,6 +346,94 @@ class HoodController {
       });
     }
   }
+
+    public async renameBlock(
+    request: Request,
+    response: Response,
+  ): Promise<void> {
+    const { apitoken } = request.headers;
+    const hoodId = Number(request.params.id);
+    const blockId = Number(request.params.blockId);
+    const name = request.body && request.body.name;
+
+    try {
+      if (typeof apitoken !== 'string' || !apitoken) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      let session;
+
+      try {
+        session = this.memberService.decodeMemberToken(apitoken);
+      } catch (error) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      if (!session) {
+        response.status(401).json({
+          error: 'Invalid or missing token.',
+        });
+        return;
+      }
+
+      if (
+        !Number.isSafeInteger(hoodId) ||
+        hoodId <= 0 ||
+        !Number.isSafeInteger(blockId) ||
+        blockId <= 0 ||
+        typeof name !== 'string' ||
+        name.trim().length === 0 ||
+        name.trim().length > 100
+      ) {
+        response.status(400).json({
+          error: 'Invalid neighbourhood, block or name.',
+        });
+        return;
+      }
+
+      const canRename = await this.hoodService.canRenameBlock(
+        hoodId,
+        session.id,
+      );
+
+      if (!canRename) {
+        response.status(403).json({
+          error: 'You do not have permission to rename blocks.',
+        });
+        return;
+      }
+
+      const renamed = await this.hoodService.renameBlock(
+        hoodId,
+        blockId,
+        name.trim(),
+      );
+
+      if (!renamed) {
+        response.status(404).json({
+          error: 'Block not found in this neighbourhood.',
+        });
+        return;
+      }
+
+      response.status(200).json({
+        success: true,
+        name: name.trim(),
+      });
+    } catch (error) {
+      console.error('Failed to rename block', error);
+
+      response.status(500).json({
+        error: 'Failed to rename block.',
+      });
+    }
+  }
 }
 
 const hoodService = Container.get(HoodService);

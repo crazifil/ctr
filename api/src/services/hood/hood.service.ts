@@ -156,6 +156,18 @@ export class HoodService {
     );
   }
 
+  public async renameBlock(
+    hoodId: number,
+    blockId: number,
+    name: string,
+  ): Promise<boolean> {
+    return await this.hoodRepository.renameBlock(
+      hoodId,
+      blockId,
+      name,
+    );
+  }
+
   public async canAdmin(hoodId: number, memberId: number): Promise<boolean> {
     const roleAssignments = await this.roleAssignmentRepository.getByMemberId(memberId);
     const colony = await this.getColony(hoodId);
@@ -183,6 +195,29 @@ export class HoodService {
       return true;
     }
     return false;
+  }
+
+  public async canRenameBlock(
+    hoodId: number,
+    memberId: number,
+  ): Promise<boolean> {
+    const roleAssignments =
+      await this.roleAssignmentRepository.getByMemberId(memberId);
+
+    const colony = await this.getColony(hoodId);
+
+    return roleAssignments.some(assignment => {
+      return (
+        [
+          this.roleRepository.roleMap.Admin,
+          this.roleRepository.roleMap.ColonyRepresentative,
+        ].includes(assignment.role_id) ||
+        (
+          assignment.role_id === this.roleRepository.roleMap.ColonyLeader &&
+          assignment.place_id === colony.id
+        )
+      );
+    });
   }
 
   public async canManageAccess(hoodId: number, memberId: number): Promise<boolean> {
